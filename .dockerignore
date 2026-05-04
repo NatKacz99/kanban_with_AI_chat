@@ -1,0 +1,19 @@
+# Python
+__pycache__
+*.pyc
+.venv/
+.env
+
+# Node / Next.js
+node_modules/
+frontend/.next/
+frontend/out/
+
+# Tests / reports
+test-results/
+dist/
+
+# Git / OS
+.git/
+.DS_Store
+Thumbs.db
