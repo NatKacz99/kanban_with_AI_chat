@@ -1,12 +1,12 @@
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 
 app = FastAPI()
+api = FastAPI()
 
-@app.get("/", response_class=HTMLResponse)
-def root():
-    return "<h1>Hello world</h1>"
-
-@app.get("/api/health")
+@api.get("/health")
 def health():
     return {"status": "ok"}
+
+app.mount("/api", api)
+app.mount("/", StaticFiles(directory="frontend/out", html=True), name="static")
