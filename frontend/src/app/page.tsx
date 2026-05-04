@@ -1,10 +1,14 @@
+'use client';
+
 import LoginForm from "@/components/LoginForm";
 import { KanbanBoard } from "@/components/KanbanBoard";
 import { useState } from "react";
-import { on } from "events";
 
 export default function Home() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+     if (typeof window === "undefined") return false;
+     return localStorage.getItem("auth") === "true";
+  });
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -13,6 +17,7 @@ export default function Home() {
     e.preventDefault();
     if (username === "user" && password === "password") {
       setIsAuthenticated(true);
+      localStorage.setItem("auth", "true");
       setError("");
     } else {
       setError("Invalid credentials");
@@ -21,6 +26,7 @@ export default function Home() {
 
   const handleLogout = () => {
     setIsAuthenticated(false);
+    localStorage.removeItem("auth");
     setUsername("");
     setPassword("");
     setError("");
@@ -38,5 +44,16 @@ export default function Home() {
       />
     )
   }
-  return <KanbanBoard />;
+  return (
+    <main>
+      <div style={{ width: "100%" }}>
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 16 }}>
+          <button className="auth-button" type="button" onClick={handleLogout}>
+            Logout
+          </button>
+        </div>
+        <KanbanBoard />
+      </div>
+    </main>
+  );
 }

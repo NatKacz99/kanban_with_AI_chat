@@ -18,30 +18,37 @@ export default function LoginForm({
     onSubmit
 } : LoginFormProps) {
     return (
-        <form onSubmit={onSubmit}>
-            <h1>Sign in</h1>
+        <main>
+            <form className="auth-card" onSubmit={onSubmit}>
+                <h1 className="auth-title">Sign in</h1>
+                <p className="auth-subtitle">Use the demo credentials to continue.</p>
 
-            <label>
-                Username
-                <input
-                    type="text"
-                    value={username}
-                    onChange={(e) => onUsernameChange(e.target.value)}
-                />
-            </label>
+                <label className="auth-field">
+                    Username
+                    <input
+                        className="auth-input"
+                        type="text"
+                        value={username}
+                        onChange={(e) => onUsernameChange(e.target.value)}
+                    />
+                </label>
 
-            <label>
-                Password
-                <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => onPasswordChange(e.target.value)}
-                />
-            </label>
+                <label className="auth-field">
+                    Password
+                    <input
+                        className="auth-input"
+                        type="password"
+                        value={password}
+                        onChange={(e) => onPasswordChange(e.target.value)}
+                    />
+                </label>
 
-            {error && <p>{error}</p>}
+                {error && <p className="auth-error">{error}</p>}
 
-            <button type="submit">Sign in</button>
-        </form>
+                <div className="auth-actions">
+                    <button className="auth-button" type="submit">Sign in</button>
+                </div>
+            </form>
+        </main>
     )
 }
