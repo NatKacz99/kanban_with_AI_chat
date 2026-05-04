@@ -2,7 +2,21 @@
 
 Part 1: Plan
 
-Enrich this document to plan out each of these parts in detail, with substeps listed out as a checklist to be checked off by the agent, and with tests and success critieria for each. Also create an AGENTS.md file inside the frontend directory that describes the existing code there. Ensure the user checks and approves the plan.
+Goal: produce an approved, detailed execution plan and a full architecture breakdown of the existing frontend.
+
+Checklist:
+- [ ] Read project requirements in `AGENTS.md` (root) and confirm constraints.
+- [ ] Review the current frontend codebase and write a full architecture breakdown in `frontend/AGENTS.md`.
+- [ ] Expand this plan with detailed steps for Parts 2-10, each with substeps, tests, and success criteria.
+- [ ] Present the enriched plan to the user and obtain explicit approval before continuing.
+
+Tests:
+- No automated tests required for Part 1.
+
+Success criteria:
+- `frontend/AGENTS.md` exists and captures the frontend architecture in detail.
+- `docs/PLAN.md` includes detailed checklists, tests, and success criteria for Parts 2-10.
+- User explicitly approves the plan.
 
 Part 2: Scaffolding
 

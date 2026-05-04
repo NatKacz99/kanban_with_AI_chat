@@ -20,12 +20,12 @@ For the MVP, this will run locally (in a docker container)
 ## Technical Decisions
 
 - NextJS frontend
-- Python FastAPI backend, including serving the static NextJS site at /
+- Python FastAPI backend, serving the statically built NextJS site at /
 - Everything packaged into a Docker container
 - Use "uv" as the package manager for python in the Docker container
 - Use OpenRouter for the AI calls. An OPENROUTER_API_KEY is in .env in the project root
 - Use `openai/gpt-oss-120b` as the model
-- Use SQLLite local database for the database, creating a new db if it doesn't exist
+- Use SQLite local database for the database, creating a new db if it doesn't exist
 - Start and Stop server scripts for Mac, PC, Linux in scripts/
 
 ## Starting Point
@@ -42,10 +42,16 @@ A working MVP of the frontend has been built and is already in frontend. This is
 
 ## Coding standards
 
-1. Use latest versions of libraries and idiomatic approaches as of today
+1. Use latest stable versions of libraries and idiomatic approaches as of project start date
 2. Keep it simple - NEVER over-engineer, ALWAYS simplify, NO unnecessary defensive programming. No extra features - focus on simplicity.
 3. Be concise. Keep README minimal. IMPORTANT: no emojis ever
 4. When hitting issues, always identify root cause before trying a fix. Do not guess. Prove with evidence, then fix the root cause.
+
+## Out of scope (for MVP)
+
+- User roles/permissions beyond the single hardcoded user
+- Multiple boards per user
+- Advanced access control, auditing, or enterprise features
 
 ## Working documentation
 
