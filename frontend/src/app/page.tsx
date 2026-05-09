@@ -2,7 +2,7 @@
 
 import LoginForm from "@/components/LoginForm";
 import { KanbanBoard } from "@/components/KanbanBoard";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
@@ -13,6 +13,10 @@ export default function Home() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    localStorage.removeItem("auth");
+  }, []);
+  
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (username === "user" && password === "password") {

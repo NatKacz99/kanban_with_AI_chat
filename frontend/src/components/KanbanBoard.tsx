@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -13,11 +13,14 @@ import {
 } from "@dnd-kit/core";
 import { KanbanColumn } from "@/components/KanbanColumn";
 import { KanbanCardPreview } from "@/components/KanbanCardPreview";
-import { createId, initialData, moveCard, type BoardData } from "@/lib/kanban";
+import { moveCard, type BoardData } from "@/lib/kanban";
+import { createCard, deleteCard, getBoard, moveCardApi, renameColumn } from "@/lib/api";
 
 export const KanbanBoard = () => {
-  const [board, setBoard] = useState<BoardData>(() => initialData);
+  const [board, setBoard] = useState<BoardData | null>(null);
   const [activeCardId, setActiveCardId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -25,71 +28,136 @@ export const KanbanBoard = () => {
     })
   );
 
-  const cardsById = useMemo(() => board.cards, [board.cards]);
+  const cardsById = useMemo(() => board?.cards ?? {}, [board?.cards]);
+
+  useEffect(() => {
+    let isMounted = true;
+    getBoard()
+      .then((data) => {
+        if (isMounted) {
+          setBoard(data);
+          setIsLoading(false);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setError("Failed to load board data.");
+          setIsLoading(false);
+        }
+      });
+
+      return () => {
+        isMounted = false;
+      }
+  }, []);
+
+  const findColumnId = (columns: BoardData["columns"], id: string) => {
+    if (columns.some((column) => column.id === id)) {
+      return id;
+    }
+    return columns.find((column) => column.cardIds.includes(id))?.id;
+  };
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveCardId(event.active.id as string);
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveCardId(null);
 
-    if (!over || active.id === over.id) {
+    if (!over || !board || active.id === over.id) {
       return;
     }
 
-    setBoard((prev) => ({
-      ...prev,
-      columns: moveCard(prev.columns, active.id as string, over.id as string),
-    }));
+    const nextColumns = moveCard(
+      board.columns,
+      active.id as string,
+      over.id as string
+    );
+    const destinationColumnId = findColumnId(
+      nextColumns,
+      active.id as string
+    );
+    if (!destinationColumnId) {
+      return;
+    }
+
+    const destinationColumn = nextColumns.find(
+      (column) => column.id === destinationColumnId
+    );
+    const toPosition = destinationColumn 
+      ? destinationColumn.cardIds.indexOf(active.id as string)
+      : 0;
+
+    try {
+      const updated = await moveCardApi(
+        active.id as string,
+        destinationColumnId,
+        toPosition
+      );
+      setBoard(updated);
+    } catch {
+      setError("Failed to move card.")
+    }
   };
 
-  const handleRenameColumn = (columnId: string, title: string) => {
-    setBoard((prev) => ({
-      ...prev,
-      columns: prev.columns.map((column) =>
-        column.id === columnId ? { ...column, title } : column
-      ),
-    }));
-  };
+const handleRenameColumn = async (columnId: string, title: string) => {
+  try {
+    const updated = await renameColumn(columnId, title);
+    setBoard(updated);
+  } catch {
+    setError("Failed to rename column.")
+  }
+};
 
-  const handleAddCard = (columnId: string, title: string, details: string) => {
-    const id = createId("card");
-    setBoard((prev) => ({
-      ...prev,
-      cards: {
-        ...prev.cards,
-        [id]: { id, title, details: details || "No details yet." },
-      },
-      columns: prev.columns.map((column) =>
-        column.id === columnId
-          ? { ...column, cardIds: [...column.cardIds, id] }
-          : column
-      ),
-    }));
-  };
+const handleAddCard = async (
+  columnId: string,
+  title: string,
+  details: string
+) => {
+  try {
+    const updated = await createCard(
+      columnId,
+      title,
+      details || "No details yet."
+    );
+    setBoard(updated);
+  } catch {
+    setError("Failed to create card.")
+  }
+};
 
-  const handleDeleteCard = (columnId: string, cardId: string) => {
-    setBoard((prev) => {
-      return {
-        ...prev,
-        cards: Object.fromEntries(
-          Object.entries(prev.cards).filter(([id]) => id !== cardId)
-        ),
-        columns: prev.columns.map((column) =>
-          column.id === columnId
-            ? {
-                ...column,
-                cardIds: column.cardIds.filter((id) => id !== cardId),
-              }
-            : column
-        ),
-      };
-    });
-  };
+const handleDeleteCard = async (_columnId: string, cardId: string) => {
+  try {
+    const updated = await deleteCard(cardId);
+    setBoard(updated);
+  } catch {
+    setError("Failed to delete card.");
+  }
+};
 
-  const activeCard = activeCardId ? cardsById[activeCardId] : null;
+const activeCard = activeCardId ? cardsById[activeCardId] : null;
+
+if (isLoading) {
+  return (
+    <main className="flex min-h-screen items-center justify-center text-sm text-[var(--gray-text)]">
+      Loading board...
+    </main>
+  );
+}
+
+if (error) {
+  return (
+    <main className="flex min-h-screen items-center justify-center text-sm text-[var(--gray-text)]">
+      {error}
+    </main>
+  )
+}
+
+if (!board) {
+  return null;
+}
 
   return (
     <div className="relative overflow-hidden">
