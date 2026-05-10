@@ -14,13 +14,17 @@ import {
 import { KanbanColumn } from "@/components/KanbanColumn";
 import { KanbanCardPreview } from "@/components/KanbanCardPreview";
 import { moveCard, type BoardData } from "@/lib/kanban";
-import { createCard, deleteCard, getBoard, moveCardApi, renameColumn } from "@/lib/api";
+import { createCard, deleteCard, getBoard, moveCardApi, renameColumn, replaceBoard, sendAIChat } from "@/lib/api";
+import { AIChatSidebar, type AIChatMessage } from "@/components/AIChatSidebar";
 
 export const KanbanBoard = () => {
   const [board, setBoard] = useState<BoardData | null>(null);
   const [activeCardId, setActiveCardId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [chatMessages, setChatMessages] = useState<AIChatMessage[]>([]);
+  const [isChatLoading, setIsChatLoading] = useState(false);
+  const [chatError, setChatError] = useState<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -159,6 +163,31 @@ if (!board) {
   return null;
 }
 
+const handleSendChat = async (message: string) => {
+  setIsChatLoading(true);
+  setChatError(null);
+
+  const nextMessages: AIChatMessage[] = [
+    ...chatMessages,
+    {role: "user", content: message}
+  ];
+  setChatMessages(nextMessages);
+
+  try {
+    const response = await sendAIChat(message, chatMessages);
+    setChatMessages((prev) => [...prev, {role: "assistant", content: response.reply}]);
+
+    if (response.board) {
+      const updated = await replaceBoard(response.board);
+      setBoard(updated);
+    }
+  } catch {
+    setChatError("Failed to send message.");
+  } finally {
+    setIsChatLoading(false);
+  }
+};
+
   return (
     <div className="relative overflow-hidden">
       <div className="pointer-events-none absolute left-0 top-0 h-[420px] w-[420px] -translate-x-1/3 -translate-y-1/3 rounded-full bg-[radial-gradient(circle,_rgba(32,157,215,0.25)_0%,_rgba(32,157,215,0.05)_55%,_transparent_70%)]" />
@@ -201,32 +230,40 @@ if (!board) {
           </div>
         </header>
 
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCorners}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-        >
-          <section className="grid gap-6 lg:grid-cols-5">
-            {board.columns.map((column) => (
-              <KanbanColumn
-                key={column.id}
-                column={column}
-                cards={column.cardIds.map((cardId) => board.cards[cardId])}
-                onRename={handleRenameColumn}
-                onAddCard={handleAddCard}
-                onDeleteCard={handleDeleteCard}
-              />
-            ))}
-          </section>
-          <DragOverlay>
-            {activeCard ? (
-              <div className="w-[260px]">
-                <KanbanCardPreview card={activeCard} />
-              </div>
-            ) : null}
-          </DragOverlay>
-        </DndContext>
+        <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCorners}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
+            <section className="grid gap-6 lg:grid-cols-5">
+              {board.columns.map((column) => (
+                <KanbanColumn
+                  key={column.id}
+                  column={column}
+                  cards={column.cardIds.map((cardId) => board.cards[cardId])}
+                  onRename={handleRenameColumn}
+                  onAddCard={handleAddCard}
+                  onDeleteCard={handleDeleteCard}
+                />
+              ))}
+            </section>
+            <DragOverlay>
+              {activeCard ? (
+                <div className="w-[260px]">
+                  <KanbanCardPreview card={activeCard} />
+                </div>
+              ) : null}
+            </DragOverlay>
+          </DndContext>
+          <AIChatSidebar
+            messages={chatMessages}
+            isLoading={isChatLoading}
+            error={chatError}
+            onSend={handleSendChat}
+          />
+        </div>
       </main>
     </div>
   );

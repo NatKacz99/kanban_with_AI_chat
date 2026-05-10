@@ -24,20 +24,20 @@ export const getBoard = () => request<BoardData>("board");
 
 export const renameColumn = (columnId: string, title: string) => 
     request<BoardData>(
-        `/columns/${columnId}`, {
+        `columns/${columnId}`, {
             method: "PUT",
             body: { title },
         }
     );
 
 export const createCard = (columnId: string, title: string, details: string) =>
-    request<BoardData>("/cards", {
+    request<BoardData>("cards", {
         method: "POST",
         body: {columnId, title, details},
     });
 
 export const deleteCard = (cardId: string) => 
-    request<BoardData>(`/cards/${cardId}`, {
+    request<BoardData>(`cards/${cardId}`, {
         method: "DELETE",
     })
 
@@ -46,7 +46,23 @@ export const moveCardApi = (
     toColumnId: string,
     toPosition: number
 ) => 
-    request<BoardData>(`/cards/${cardId}/move`, {
+    request<BoardData>(`cards/${cardId}/move`, {
         method: "POST",
         body: {toColumnId, toPosition},
     });
+
+export type ChatMessage = {role: string; content: string};
+export type AIChatResponse = {reply: string; board: BoardData | null};
+
+export const sendAIChat = (message: string, history: ChatMessage[]) => 
+    request<AIChatResponse>("ai/chat", {
+        method: "POST",
+        body: {message, history}
+    });
+
+export const replaceBoard = (board: BoardData) =>
+    request<BoardData>("board/replace", {
+        method: "POST",
+        body: board
+    });
+
