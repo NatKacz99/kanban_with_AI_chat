@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 import uuid
+from .ai import call_openrouter
 
 from .db import get_connection, init_db
 from .schemas import ColumnCreate, ColumnUpdate, CardCreate, CardUpdate, CardMove
@@ -175,6 +176,11 @@ def move_card(card_id: str, payload: CardMove):
         update_positions(conn, to_column, to_ids)
 
         return build_board(conn)
+
+@app.get("/api/ai/test")
+def ai_test():
+    answer = call_openrouter("2+2")
+    return {"answer": answer}
 
 static_dir = Path("frontend/out")
 app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")

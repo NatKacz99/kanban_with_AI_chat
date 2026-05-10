@@ -135,6 +135,13 @@ Part 8: AI connectivity
 
 Now allow the backend to make an AI call via OpenRouter. Test connectivity with a simple "2+2" test and ensure the AI call is working.
 
+Notes (Part 8 decisions):
+- Add a new backend endpoint: `/api/ai/test`.
+- Use direct HTTPS calls with `requests` (no SDK).
+- No mocking: the test must reach OpenRouter and return a real model response.
+- Model: `openai/gpt-oss-120b:free`, API key in root `.env` as `OPENROUTER_API_KEY`.
+- Implement OpenRouter client logic in `backend/ai.py`.
+
 Part 9: Now extend the backend call so that it always calls the AI with the JSON of the Kanban board, plus the user's question (and conversation history). The AI should respond with Structured Outputs that includes the response to the user and optionaly an update to the Kanban. Test thoroughly.
 
 Part 10: Now add a beautiful sidebar widget to the UI supporting full AI chat, and allowing the LLM (as it determines) to update the Kanban based on its Structured Outputs. If the AI updates the Kanban, then the UI should refresh automatically.

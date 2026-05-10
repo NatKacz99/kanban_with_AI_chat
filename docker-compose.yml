@@ -11,3 +11,5 @@ services:
       - PYTHONUNBUFFERED=1
     volumes:
       - ./:/app
+    env_file:
+      - .env
