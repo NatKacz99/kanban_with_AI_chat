@@ -2,10 +2,12 @@ from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 import uuid
-from .ai import call_openrouter
+from .ai import call_openrouter, call_openrouter_structured
 
 from .db import get_connection, init_db
 from .schemas import ColumnCreate, ColumnUpdate, CardCreate, CardUpdate, CardMove
+from .schemas import AIChatRequest, AIChatResponse, BoardState
+from .ai_schema import AI_RESPONSE_SCHEMA
 
 app = FastAPI()
 
@@ -184,3 +186,37 @@ def ai_test():
 
 static_dir = Path("frontend/out")
 app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
+
+@app.post("/api/ai/chat", response_model=AIChatResponse)
+def ai_chat(payload: AIChatRequest):
+    with get_connection() as conn:
+        board = build_board(conn)
+
+    system_prompt = (
+        "You are an assistant for a kanban project management app."
+        "You will receive the current board state and the user's request."
+        "Return JSON that matches the provided schema."
+        "Set 'board' to null if no changes are needed."
+    )
+
+    messages = [
+        {
+            "role": "user",
+            "content": (
+                "Board state:\n"
+                f"{board}\n\n"
+                "Conversation history:\n"
+                f"{[m.dict() for m in payload.history]}\n\n"
+                "User request:\n"
+                f"{payload.message}"
+            )
+        }
+    ]
+
+    result = call_openrouter_structured(system_prompt, messages, AI_RESPONSE_SCHEMA)
+
+    if result.get("board") is None:
+        return AIChatResponse(reply=result["reply"], board=None)
+
+    validated_board = BoardState(**result["board"])
+    return AIChatResponse(reply=result["reply"], board=validated_board)

@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Dict, List, Optional
 
 class ColumnCreate(BaseModel):
     title: str
@@ -21,3 +21,29 @@ class CardUpdate(BaseModel):
 class CardMove(BaseModel):
     toColumnId: str
     toPosition: Optional[int] = None
+
+class AIMessage(BaseModel):
+    role: str
+    content: str
+
+class CardState(BaseModel):
+    id: str
+    title: str
+    details: str = ""
+
+class ColumnState(BaseModel):
+    id: str
+    title: str
+    cardIds: List[str]
+
+class BoardState(BaseModel):
+    columns: List[ColumnState]
+    cards: Dict[str, CardState]
+
+class AIChatRequest(BaseModel):
+    message: str
+    history: List[AIMessage] = []
+
+class AIChatResponse(BaseModel):
+    reply: str
+    board: Optional[BoardState] = None
