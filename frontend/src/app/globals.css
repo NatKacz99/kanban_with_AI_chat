@@ -94,7 +94,26 @@ main {
 .auth-actions {
   display: flex;
   justify-content: flex-end;
+  gap: 12px;
   margin-top: 8px;
+}
+
+.auth-secondary {
+  background: transparent;
+  color: var(--primary-blue);
+  border: 1px solid var(--stroke);
+  border-radius: 999px;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+.auth-secondary:hover {
+  color: var(--navy-dark);
+  border-color: color-mix(in srgb, var(--primary-blue) 45%, var(--stroke));
+  transform: translateY(-1px);
 }
 
 .auth-button {

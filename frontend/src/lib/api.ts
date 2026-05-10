@@ -4,11 +4,13 @@ type RequestOptions = Omit<RequestInit, "body"> & { body?: object };
 
 const request = async <T>(path: string, options: RequestOptions = {}): Promise<T> => {
     const {body, headers, ...rest} = options;
+    const token = typeof window === "undefined" ? null : localStorage.getItem("token");
     const response = await fetch(`/api/${path}`, {
         ...rest,
         headers: {
             "Content-Type": "application/json",
             ...headers,
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: body ? JSON.stringify(body) : undefined,
     });
@@ -19,6 +21,18 @@ const request = async <T>(path: string, options: RequestOptions = {}): Promise<T
 
     return response.json() as Promise<T>;
 };
+
+export const login = (username: string, password: string) =>
+    request<{access_token: string}>("auth/login", {
+        method: "POST",
+        body: {username, password}
+    })
+
+export const register = (username: string, password: string) => 
+    request("auth/register", {
+        method: "POST",
+        body: {username, password}
+    })
 
 export const getBoard = () => request<BoardData>("board");
 

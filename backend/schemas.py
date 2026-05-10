@@ -1,6 +1,17 @@
 from pydantic import BaseModel
 from typing import Dict, List, Optional
 
+class RegisterRequest(BaseModel):
+    username: str
+    password: str
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+class TokenResponse(BaseModel):
+    access_token: str
+
 class ColumnCreate(BaseModel):
     title: str
     position: Optional[int] = None

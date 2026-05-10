@@ -7,6 +7,7 @@ type LoginFormProps = {
     onUsernameChange: (value: string) => void;
     onPasswordChange: (value: string) => void;
     onSubmit: (e: React.FormEvent) => void;
+    onSwitchToRegister: () => void;
 };
 
 export default function LoginForm({
@@ -15,13 +16,14 @@ export default function LoginForm({
     error,
     onUsernameChange,
     onPasswordChange,
-    onSubmit
+    onSubmit,
+    onSwitchToRegister
 } : LoginFormProps) {
     return (
         <main>
             <form className="auth-card" onSubmit={onSubmit}>
                 <h1 className="auth-title">Sign in</h1>
-                <p className="auth-subtitle">Use the demo credentials to continue.</p>
+                <p className="auth-subtitle">Sign in to access your board.</p>
 
                 <label className="auth-field">
                     Username
@@ -46,6 +48,7 @@ export default function LoginForm({
                 {error && <p className="auth-error">{error}</p>}
 
                 <div className="auth-actions">
+                    <button className="auth-secondary" type="button" onClick={onSwitchToRegister}>Create account</button>
                     <button className="auth-button" type="submit">Sign in</button>
                 </div>
             </form>

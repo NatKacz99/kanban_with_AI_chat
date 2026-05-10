@@ -1,43 +1,59 @@
 'use client';
 
 import LoginForm from "@/components/LoginForm";
+import RegisterForm from "@/components/RegisterForm";
 import { KanbanBoard } from "@/components/KanbanBoard";
+import { login, register } from "@/lib/api";
 import { useEffect, useState } from "react";
 
 export default function Home() {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-     if (typeof window === "undefined") return false;
-     return localStorage.getItem("auth") === "true";
-  });
+    const [isAuthenticated, setIsAuthenticated] = useState(() => {
+      if (typeof window === "undefined") return false;
+      return Boolean(localStorage.getItem("token"));
+    });
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [mode, setMode] = useState<"login" | "register">("login");
 
-  useEffect(() => {
-    localStorage.removeItem("auth");
-  }, []);
-  
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (username === "user" && password === "password") {
+    try {
+      const { access_token } = await login(username, password);
+      localStorage.setItem("token", access_token);
       setIsAuthenticated(true);
-      localStorage.setItem("auth", "true");
       setError("");
-    } else {
+    } catch {
       setError("Invalid credentials");
     }
-  }
+  };
 
   const handleLogout = () => {
     setIsAuthenticated(false);
-    localStorage.removeItem("auth");
+    localStorage.removeItem("token");
     setUsername("");
     setPassword("");
     setError("");
-  }
+    setMode("login");
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password.trim().length < 8) {
+      setError("Password must be at least 8 characters");
+      return;
+    }
+    try {
+      await register(username, password);
+      setError("");
+      setMode("login");
+    } catch {
+      setError("Unable to create account");
+    }
+  };
 
   if (!isAuthenticated) {
-    return (
+    return mode === "login" ? (
       <LoginForm
         username={username}
         password={password}
@@ -45,8 +61,25 @@ export default function Home() {
         onUsernameChange={setUsername}
         onPasswordChange={setPassword}
         onSubmit={handleLogin}
+        onSwitchToRegister={() => {
+          setError("");
+          setMode("register");
+        }}
       />
-    )
+    ) : (
+      <RegisterForm
+        username={username}
+        password={password}
+        error={error}
+        onUsernameChange={setUsername}
+        onPasswordChange={setPassword}
+        onSubmit={handleRegister}
+        onSwitchToLogin={() => {
+          setError("");
+          setMode("login");
+        }}
+      />
+    );
   }
   return (
     <main>

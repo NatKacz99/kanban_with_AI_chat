@@ -5,6 +5,7 @@
       "fields": [
         { "name": "id", "type": "integer", "constraints": ["primary_key"] },
         { "name": "username", "type": "text", "constraints": ["unique", "required"] },
+        {"name": "password_hash", "type": "text", "constraints": ["required"] },
         { "name": "created_at", "type": "datetime" }
       ]
     },
