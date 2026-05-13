@@ -11,32 +11,33 @@ Persist a single Kanban board per user (MVP) in SQLite, created on first run if 
 ### Users
 - Stores basic user identity for future multi-user support (MVP has one hardcoded user).
 - Fields:
-  - id (integer, primary key)
+  - id (uuid, primary key)
   - username (text, unique, required)
+  - password_hash (text, required)
   - created_at (datetime)
 
 ### Boards
 - One board per user in MVP.
 - Fields:
-  - id (integer, primary key)
-  - user_id (integer, foreign key -> users.id)
+  - id (uuid, primary key)
+  - user_id (uuid, foreign key -> users.id)
   - name (text)
   - created_at (datetime)
 
 ### Columns
 - Fixed set per board; names can be edited.
 - Fields:
-  - id (integer, primary key)
-  - board_id (integer, foreign key -> boards.id)
-  - title (text)
+  - id (uuid, primary key)
+  - board_id (uuid, foreign key -> boards.id)
+  - title (text, required)
   - position (integer)  
   - created_at (datetime)
 
 ### Cards
 - Cards belong to a column; ordering by position.
 - Fields:
-  - id (integer, primary key)
-  - column_id (integer, foreign key -> columns.id)
+  - id (uuid, primary key)
+  - column_id (uuid, foreign key -> columns.id)
   - title (text)
   - description (text)
   - position (integer)

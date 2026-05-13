@@ -3,7 +3,7 @@
     {
       "name": "users",
       "fields": [
-        { "name": "id", "type": "integer", "constraints": ["primary_key"] },
+        { "name": "id", "type": "uuid", "constraints": ["primary_key"] },
         { "name": "username", "type": "text", "constraints": ["unique", "required"] },
         {"name": "password_hash", "type": "text", "constraints": ["required"] },
         { "name": "created_at", "type": "datetime" }
@@ -12,8 +12,8 @@
     {
       "name": "boards",
       "fields": [
-        { "name": "id", "type": "integer", "constraints": ["primary_key"] },
-        { "name": "user_id", "type": "integer", "constraints": ["foreign_key: users.id"] },
+        { "name": "id", "type": "uuid", "constraints": ["primary_key"] },
+        { "name": "user_id", "type": "uuid", "constraints": ["foreign_key: users.id"] },
         { "name": "name", "type": "text" },
         { "name": "created_at", "type": "datetime" }
       ]
