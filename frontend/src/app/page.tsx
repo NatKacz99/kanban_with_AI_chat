@@ -47,8 +47,13 @@ export default function Home() {
       await register(username, password);
       setError("");
       setMode("login");
-    } catch {
-      setError("Unable to create account");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "";
+      if (message.includes("409")) {
+        setError("Username already exists. Choose a different username.");
+      } else {
+        setError("Unable to create account");
+      }
     }
   };
 
