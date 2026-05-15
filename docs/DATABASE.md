@@ -39,7 +39,7 @@ Persist a single Kanban board per user (MVP) in SQLite, created on first run if 
   - id (uuid, primary key)
   - column_id (uuid, foreign key -> columns.id)
   - title (text)
-  - description (text)
+  - details (text)
   - position (integer)
   - created_at (datetime)
   - updated_at (datetime)
