@@ -46,7 +46,7 @@ export const buildBoard = async (boardId: string): Promise<BoardData> => {
     }
 
     return {
-        columns: columnsResponse.rows.map((column) => ({
+        columns: columnsResponse.rows.map((column: { id: string; title: string }) => ({
             id: column.id,
             title: column.title,
             cardIds: cardsByColumn[column.id] ?? [],
