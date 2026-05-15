@@ -1,9 +1,9 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { verifyToken } from "../_lib/auth";
-import { getBoardIdForUser, buildBoard } from "../_lib/board";
+import { getBoardIdForUser, replaceBoard } from "../_lib/board";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-    if (req.method !== "GET") return res.status(405).end();
+    if (req.method !== "POST") return res.status(405).end();
 
     const auth = req.headers.authorization || "";
     if (!auth.startsWith("Bearer ")) {
@@ -15,14 +15,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const payload = await verifyToken(token);
         const userId = payload.sub as string;
 
-        const boardId =  await getBoardIdForUser(userId);
+        const boardId = await getBoardIdForUser(userId);
         if (!boardId) {
             return res.status(404).json({detail: "Board not found"});
         }
 
-        const board = await buildBoard(boardId);
-
-        return res.status(200).json(board);
+        const updated = await replaceBoard(boardId, req.body);
+        return res.status(200).json(updated);
     } catch {
         return res.status(401).json({detail: "Invalid token"});
     }
