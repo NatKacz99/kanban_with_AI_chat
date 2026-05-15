@@ -2,12 +2,10 @@ import type {BoardData} from "@/lib/kanban";
 
 type RequestOptions = Omit<RequestInit, "body"> & { body?: object };
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
-
 const request = async <T>(path: string, options: RequestOptions = {}): Promise<T> => {
     const {body, headers, ...rest} = options;
     const token = typeof window === "undefined" ? null : localStorage.getItem("token");
-    const response = await fetch(`${API_BASE}/api/${path}`, {
+    const response = await fetch(`/api/${path}`, {
         ...rest,
         headers: {
             "Content-Type": "application/json",

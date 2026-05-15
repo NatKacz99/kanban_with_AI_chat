@@ -122,6 +122,8 @@ Checklist:
 - [x] Add loading/error UI states.
 - [x] Update unit tests to mock API.
 - [x] Update Playwright tests to login and interact with API-backed UI.
+- [x] Add multi-user auth support (register/login endpoints, JWT, per-user board).
+- [x] Add registration UI and client-side validation.
 
 Tests:
 - Vitest unit tests for board interactions (mocked API).

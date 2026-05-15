@@ -11,7 +11,7 @@ This project is building a Project Management App. Key features:
 
 ## Limitations
 
-For the MVP, there will only be a user sign in (hardcoded to 'user' and 'password') but the database will support multiple users for future.
+For the MVP, users can register and sign in with their own credentials; the database supports multiple users.
 
 For the MVP, there will only be 1 Kanban board per signed in user.
 
@@ -49,7 +49,7 @@ A working MVP of the frontend has been built and is already in frontend. This is
 
 ## Out of scope (for MVP)
 
-- User roles/permissions beyond the single hardcoded user
+- User roles/permissions beyond basic multi-user authentication
 - Multiple boards per user
 - Advanced access control, auditing, or enterprise features
 
