@@ -4,10 +4,9 @@ from pathlib import Path
 from .auth import hash_password, verify_password, create_token
 from .auth_middleware import get_current_user
 from .schemas import RegisterRequest, LoginRequest, TokenResponse
-import uuid
 from .ai import call_openrouter, call_openrouter_structured
 
-from .db import get_connection, init_db
+from .db import get_connection, init_db, create_user_with_board
 from .schemas import ColumnCreate, ColumnUpdate, CardCreate, CardUpdate, CardMove
 from .schemas import AIChatRequest, AIChatResponse, BoardState
 from .ai_schema import AI_RESPONSE_SCHEMA
@@ -60,15 +59,6 @@ def update_positions(conn, column_id, card_ids):
             (index, card_id)
         )
 
-def seed_default_columns(conn, board_id: str):
-    default_columns = ["Backlog", "Discovery", "In Progress", "Review", "Done"]
-    for position, title in enumerate(default_columns):
-        column_id = f"col-{uuid.uuid4().hex}"
-        conn.execute(
-            "INSERT INTO columns (id, board_id, title, position) VALUES (?, ?, ?, ?)",
-            (column_id, board_id, title, position)
-        )
-
 @app.get("/api/health")
 def health():
     return {"status": "ok"}
@@ -83,19 +73,8 @@ def register(payload: RegisterRequest):
         if existing_user:
             raise HTTPException(status_code=409, detail="Username taken")
 
-        user_id = f"user-{uuid.uuid4().hex}"
         password_hash = hash_password(payload.password)
-        conn.execute(
-            "INSERT INTO users (id, username, password) VALUES (?, ?, ?)",
-            (user_id, payload.username, password_hash)
-        )
-
-        board_id = f"board-{uuid.uuid4().hex}"
-        conn.execute(
-            "INSERT INTO boards (id, user_id, name) VALUES (?, ?, ?)",
-            (board_id, user_id, "Main Board")
-        )
-        seed_default_columns(conn, board_id)
+        create_user_with_board(conn, payload.username, password_hash)
         return {"ok": True}
 
 @app.post("/api/auth/login", response_model=TokenResponse)

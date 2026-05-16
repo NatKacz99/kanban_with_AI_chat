@@ -1,5 +1,6 @@
 import os
 import sqlite3
+import uuid
 from contextlib import contextmanager
 
 DB_PATH = os.getenv("DB_PATH", "app.db")
@@ -64,25 +65,30 @@ def init_db():
             """
         )
 
+        # Users, boards, and columns are created during registration.
+
+DEFAULT_COLUMNS = ["Backlog", "Discovery", "In Progress", "Review", "Done"]
+
+def seed_default_columns(conn, board_id: str):
+    for position, title in enumerate(DEFAULT_COLUMNS):
+        column_id = f"col-{uuid.uuid4().hex}"
         conn.execute(
-            "INSERT OR IGNORE INTO users (id, username) VALUES (?, ?)",
-            ("user", "user")
-        )
-        conn.execute(
-            "INSERT OR IGNORE INTO boards (id, user_id, name) VALUES (?, ?, ?)",
-            ("board-1", "user", "Main Board")
+            "INSERT INTO columns (id, board_id, title, position) VALUES (?, ?, ?, ?)",
+            (column_id, board_id, title, position)
         )
 
-        count = conn.execute("SELECT COUNT(*) as c FROM columns").fetchone()["c"]
-        if count == 0:
-            columns = [
-                ("col-backlog", "board-1", "Backlog", 0),
-                ("col-discovery", "board-1", "Discovery", 1),
-                ("col-progress", "board-1", "In Progress", 2),
-                ("col-review", "board-1", "Review", 3),
-                ("col-done", "board-1", "Done", 4)
-            ]
-            conn.executemany(
-                "INSERT INTO columns (id, board_id, title, position) VALUES (?, ?, ?, ?)",
-                columns
-            )
+def create_user_with_board(conn, username: str, password_hash: str):
+    user_id = f"user-{uuid.uuid4().hex}"
+    conn.execute(
+        "INSERT INTO users (id, username, password) VALUES (?, ?, ?)",
+        (user_id, username, password_hash)
+    )
+
+    board_id = f"board-{uuid.uuid4().hex}"
+    conn.execute(
+        "INSERT INTO boards (id, user_id, name) VALUES (?, ?, ?)",
+        (board_id, user_id, "Main Board")
+    )
+
+    seed_default_columns(conn, board_id)
+    return user_id, board_id
