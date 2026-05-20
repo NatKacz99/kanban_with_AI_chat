@@ -46,7 +46,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
 
         return res.status(201).json({ ok: true });
-    } catch {
+    } catch (error) {
+        console.error("register error", error);
         return res.status(500).json({ detail: "Server error" });
     }
 }
