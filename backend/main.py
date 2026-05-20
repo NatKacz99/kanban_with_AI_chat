@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.staticfiles import StaticFiles
+import uuid
 from pathlib import Path
 from .auth import hash_password, verify_password, create_token
 from .auth_middleware import get_current_user

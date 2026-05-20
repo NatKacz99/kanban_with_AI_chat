@@ -60,7 +60,7 @@ export const moveCardApi = (
     toColumnId: string,
     toPosition: number
 ) => 
-    request<BoardData>(`cards/${cardId}/move`, {
+    request<BoardData>(`cards/${cardId}`, {
         method: "POST",
         body: {toColumnId, toPosition},
     });
