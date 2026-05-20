@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { pool } from "../_lib/db";
-import { hashPassword } from "../_lib/auth";
+import { pool } from "../_lib/db.js";
+import { hashPassword } from "../_lib/auth.js";
 
 const DEFAULT_COLUMNS = ["Backlog", "Discovery", "In Progress", "Review", "Done"];
 

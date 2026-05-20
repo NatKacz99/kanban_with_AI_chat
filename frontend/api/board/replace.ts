@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { verifyToken } from "../_lib/auth";
-import { getBoardIdForUser, replaceBoard } from "../_lib/board";
+import { verifyToken } from "../_lib/auth.js";
+import { getBoardIdForUser, replaceBoard } from "../_lib/board.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method !== "POST") return res.status(405).end();

@@ -1,7 +1,7 @@
 import type { VercelResponse, VercelRequest } from "@vercel/node";
-import { verifyToken } from "../_lib/auth";
-import { getBoardIdForUser, buildBoard } from "../_lib/board";
-import { pool } from "../_lib/db";
+import { verifyToken } from "../_lib/auth.js";
+import { getBoardIdForUser, buildBoard } from "../_lib/board.js";
+import { pool } from "../_lib/db.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method !== "PUT" && req.method !== "DELETE" && req.method !== "POST") {

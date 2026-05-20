@@ -1,7 +1,7 @@
 import type {VercelRequest, VercelResponse} from "@vercel/node";
-import {verifyToken} from "../_lib/auth";
-import {getBoardIdForUser, buildBoard} from "../_lib/board";
-import AI_RESPONSE_SCHEMA from "../_lib/ai_schema";
+import {verifyToken} from "../_lib/auth.js";
+import {getBoardIdForUser, buildBoard} from "../_lib/board.js";
+import AI_RESPONSE_SCHEMA from "../_lib/ai_schema.js";
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY!;
 const MODEL = "openai/gpt-oss-120b:free";

@@ -1,4 +1,4 @@
-import {pool} from "./db";
+import {pool} from "./db.js";
 
 export type BoardData = {
     columns: {id: string; title: string; cardIds: string[]}[];
