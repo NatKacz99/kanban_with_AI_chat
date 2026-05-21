@@ -14,7 +14,7 @@ import {
 import { KanbanColumn } from "@/components/KanbanColumn";
 import { KanbanCardPreview } from "@/components/KanbanCardPreview";
 import { moveCard, type BoardData } from "@/lib/kanban";
-import { createCard, deleteCard, getBoard, moveCardApi, renameColumn, replaceBoard, sendAIChat } from "@/lib/api";
+import { createCard, deleteCard, getBoard, moveCardApi, renameColumn, replaceBoard, sendAIChat, updateCard } from "@/lib/api";
 import { AIChatSidebar, type AIChatMessage } from "@/components/AIChatSidebar";
 
 export const KanbanBoard = () => {
@@ -25,6 +25,11 @@ export const KanbanBoard = () => {
   const [chatMessages, setChatMessages] = useState<AIChatMessage[]>([]);
   const [isChatLoading, setIsChatLoading] = useState(false);
   const [chatError, setChatError] = useState<string | null>(null);
+  const [editingCardId, setEditingCardId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDetails, setEditDetails] = useState("");
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -141,6 +146,42 @@ const handleDeleteCard = async (_columnId: string, cardId: string) => {
   }
 };
 
+const openEditModal = (cardId: string) => {
+  if (!board) return;
+  const card = board.cards[cardId];
+  if (!card) return;
+  setEditingCardId(cardId);
+  setEditTitle(card.title);
+  setEditDetails(card.details ?? "");
+  setEditError(null);
+};
+
+const closeEditModal = () => {
+  setEditingCardId(null);
+  setEditTitle("");
+  setEditDetails("");
+  setEditError(null);
+};
+
+const handleSaveEdit = async (event: React.FormEvent) => {
+  event.preventDefault();
+  if (!editingCardId) return;
+  if (!editTitle.trim()) {
+    setEditError("Title is required.");
+    return;
+  }
+  try {
+    setIsSavingEdit(true);
+    const updated = await updateCard(editingCardId, editTitle.trim(), editDetails.trim());
+    setBoard(updated);
+    closeEditModal();
+  } catch {
+    setEditError("Failed to update card.");
+  } finally {
+    setIsSavingEdit(false);
+  }
+};
+
 const activeCard = activeCardId ? cardsById[activeCardId] : null;
 
 if (isLoading) {
@@ -237,7 +278,7 @@ const handleSendChat = async (message: string) => {
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
-            <section className="grid gap-6 lg:grid-cols-5">
+            <section className="grid gap-6 overflow-x-auto lg:grid-flow-col lg:auto-cols-[minmax(240px,1fr)]">
               {board.columns.map((column) => (
                 <KanbanColumn
                   key={column.id}
@@ -246,6 +287,7 @@ const handleSendChat = async (message: string) => {
                   onRename={handleRenameColumn}
                   onAddCard={handleAddCard}
                   onDeleteCard={handleDeleteCard}
+                  onEditCard={openEditModal}
                 />
               ))}
             </section>
@@ -264,6 +306,77 @@ const handleSendChat = async (message: string) => {
             onSend={handleSendChat}
           />
         </div>
+        {editingCardId && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(3,33,71,0.45)] px-4 py-8"
+            onClick={closeEditModal}
+          >
+            <div
+              className="w-full max-w-lg rounded-3xl border border-[var(--stroke)] bg-white p-6 shadow-[0_28px_60px_rgba(3,33,71,0.25)]"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--gray-text)]">
+                    Edit card
+                  </p>
+                  <h2 className="mt-2 font-display text-2xl font-semibold text-[var(--navy-dark)]">
+                    Update details
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={closeEditModal}
+                  className="rounded-full border border-transparent px-3 py-1 text-sm font-semibold text-[var(--gray-text)] transition hover:border-[var(--stroke)] hover:text-[var(--navy-dark)]"
+                >
+                  Close
+                </button>
+              </div>
+
+              <form className="mt-6 flex flex-col gap-4" onSubmit={handleSaveEdit}>
+                <label className="flex flex-col gap-2 text-sm font-semibold text-[var(--navy-dark)]">
+                  Title
+                  <input
+                    className="w-full rounded-2xl border border-[var(--stroke)] px-4 py-3 text-sm text-[var(--navy-dark)] outline-none focus:border-[var(--primary-blue)]"
+                    value={editTitle}
+                    onChange={(event) => setEditTitle(event.target.value)}
+                  />
+                </label>
+                <label className="flex flex-col gap-2 text-sm font-semibold text-[var(--navy-dark)]">
+                  Details
+                  <textarea
+                    className="w-full min-h-[140px] rounded-2xl border border-[var(--stroke)] px-4 py-3 text-sm text-[var(--navy-dark)] outline-none focus:border-[var(--primary-blue)]"
+                    value={editDetails}
+                    onChange={(event) => setEditDetails(event.target.value)}
+                  />
+                </label>
+
+                {editError && (
+                  <p className="text-sm font-semibold text-[var(--secondary-purple)]">
+                    {editError}
+                  </p>
+                )}
+
+                <div className="mt-2 flex flex-wrap justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={closeEditModal}
+                    className="rounded-full border border-[var(--stroke)] px-4 py-2 text-sm font-semibold text-[var(--gray-text)] transition hover:border-[var(--primary-blue)] hover:text-[var(--primary-blue)]"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSavingEdit}
+                    className="modal-save-button"
+                  >
+                    {isSavingEdit ? "Saving..." : "Save changes"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

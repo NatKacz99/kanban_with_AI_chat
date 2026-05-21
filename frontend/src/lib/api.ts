@@ -55,6 +55,12 @@ export const deleteCard = (cardId: string) =>
         method: "DELETE",
     })
 
+export const updateCard = (cardId: string, title: string, details: string) =>
+    request<BoardData>(`cards/${cardId}`, {
+        method: "PUT",
+        body: { title, details },
+    });
+
 export const moveCardApi = (
     cardId: string,
     toColumnId: string,

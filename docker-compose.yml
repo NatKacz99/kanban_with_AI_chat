@@ -9,7 +9,10 @@ services:
       - "8000:8000"
     environment:
       - PYTHONUNBUFFERED=1
-    volumes:
-      - ./:/app
     env_file:
       - .env
+    volumes:
+      - app_db:/app/backend/app.db
+
+volumes:
+  app_db:

@@ -3,7 +3,7 @@ WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm install
 COPY frontend/ ./
-RUN NEXT_OUPUT=export npm run build
+RUN NEXT_OUTPUT=export npm run build
 
 FROM python:3.12-slim
 

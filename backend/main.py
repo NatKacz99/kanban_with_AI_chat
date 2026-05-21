@@ -324,6 +324,10 @@ def move_card(card_id: str, payload: CardMove, user=Depends(get_current_user)):
 
         return build_board(conn, board["id"])
 
+@app.post("/api/cards/{card_id}")
+def move_card_alias(card_id: str, payload: CardMove, user=Depends(get_current_user)):
+    return move_card(card_id, payload, user)
+
 @app.get("/api/ai/test")
 def ai_test():
     answer = call_openrouter("2+2")

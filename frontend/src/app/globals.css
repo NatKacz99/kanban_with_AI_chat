@@ -137,3 +137,36 @@ main {
 .font-display {
   font-family: var(--font-display), "Segoe UI", sans-serif;
 }
+
+h4 {
+  overflow-wrap: break-word;
+  hyphens: auto;
+  word-break: normal;
+}
+
+.card-details {
+  overflow-wrap: break-word;
+  hyphens: auto;
+  word-break: normal;
+}
+
+.modal-save-button {
+  background: var(--secondary-purple);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 8px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.modal-save-button:hover {
+  opacity: 0.9;
+}
+
+.modal-save-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
