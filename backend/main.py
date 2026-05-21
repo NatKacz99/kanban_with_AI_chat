@@ -367,6 +367,9 @@ def ai_chat(payload: AIChatRequest, user=Depends(get_current_user)):
 
     result = call_openrouter_structured(system_prompt, messages, AI_RESPONSE_SCHEMA)
 
+    if not isinstance(result, dict) or "reply" not in result:
+        raise HTTPException(status_code=502, detail="AI returned an invalid response")
+
     if result.get("board") is None:
         return AIChatResponse(reply=result["reply"], board=None)
 
