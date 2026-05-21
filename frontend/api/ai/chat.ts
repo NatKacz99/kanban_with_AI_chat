@@ -65,10 +65,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const data = await response.json();
         const content = data.choices?.[0]?.message?.content;
         if (!content) {
-            return res.status(500).json({ detail: "Empty AI response" });
+            return res.status(502).json({ detail: "AI response missing content" });
         }
-        const parsed = typeof content === "string" ? JSON.parse(content) : content;
-        
+
+        let parsed: unknown = content;
+        if (typeof content === "string") {
+            try {
+                parsed = JSON.parse(content);
+            } catch {
+                return res.status(502).json({ detail: "AI response not JSON" });
+            }
+        }
+
+        if (!parsed || typeof parsed !== "object" || !("reply" in parsed)) {
+            return res.status(502).json({ detail: "AI response missing reply" });
+        }
+
         return res.status(200).json(parsed);
   } catch {
     return res.status(401).json({ detail: "Invalid token" });
