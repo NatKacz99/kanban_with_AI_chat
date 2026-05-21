@@ -2,6 +2,8 @@
 
 A minimal project management app with a Kanban board and an AI assistant sidebar. MVP scope: one board per user, five columns, drag-and-drop cards, and an LLM chat that can modify the board.
 
+A partial Vercel deployment is available at [kanban-with-chatbot.vercel.app](https://kanban-with-chatbot.vercel.app/) — note that registration currently returns HTTP 500 there (see [Known issues](#known-issues)). For a working setup, use the Docker instructions below.
+
 ## Stack
 
 - Frontend: Next.js 16 (App Router, static export), React 19, Tailwind v4, @dnd-kit
@@ -79,7 +81,7 @@ The backend calls OpenRouter (`openai/gpt-oss-120b:free`) with Structured Output
 
 ## Known issues
 
-**Vercel deployment — HTTP 500 on registration.** The production deployment on Vercel returns 500 when registering a user. The Docker (SQLite) deployment works correctly; the issue is specific to the serverless backend in `frontend/api/`. Until this is resolved, the Docker deployment is the recommended way to run the app.
+**Vercel deployment — HTTP 500 on registration.** The production deployment at [kanban-with-chatbot.vercel.app](https://kanban-with-chatbot.vercel.app/) returns 500 when registering a user. The Docker (SQLite) deployment works correctly; the issue is specific to the serverless backend in `frontend/api/`. Until this is resolved, the Docker deployment is the recommended way to run the app.
 
 ## Out of scope (MVP)
 
