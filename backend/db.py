@@ -65,7 +65,6 @@ def init_db():
             """
         )
 
-        # Users, boards, and columns are created during registration.
 
 DEFAULT_COLUMNS = ["Backlog", "Discovery", "In Progress", "Review", "Done"]
 

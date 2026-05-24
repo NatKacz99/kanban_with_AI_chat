@@ -1,31 +1,9 @@
-import json
 import os
 import requests
+import json
 
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 MODEL_NAME = "openai/gpt-oss-120b:free"
-
-def call_openrouter(prompt: str) -> str:
-    api_key = os.getenv("OPENROUTER_API_KEY")
-    if not api_key:
-        raise RuntimeError("OPENROUTER_API_KEY environment variable is not set")
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json"
-    }
-
-    payload = {
-        "model": MODEL_NAME,
-        "messages": [
-            {"role": "user", "content": prompt}
-        ]
-    }
-
-    response = requests.post(OPENROUTER_API_URL, headers=headers, json=payload, timeout=30)
-    response.raise_for_status()
-    data = response.json()
-
-    return data["choices"][0]["message"]["content"]
 
 def call_openrouter_structured(system_prompt: str, messages: list, schema: dict) -> dict:
     api_key = os.getenv("OPENROUTER_API_KEY")
@@ -57,12 +35,5 @@ def call_openrouter_structured(system_prompt: str, messages: list, schema: dict)
     response.raise_for_status()
     data = response.json()
     content = data["choices"][0]["message"]["content"]
-
-    if isinstance(content, dict):
-        return content
-
-    try:
-        return json.loads(content)
-    except json.JSONDecodeError as exc:
-        raise RuntimeError("AI response was not valid JSON") from exc
+    return json.loads(content)
 

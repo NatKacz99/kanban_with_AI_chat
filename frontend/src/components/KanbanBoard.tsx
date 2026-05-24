@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -13,7 +13,7 @@ import {
 } from "@dnd-kit/core";
 import { KanbanColumn } from "@/components/KanbanColumn";
 import { KanbanCardPreview } from "@/components/KanbanCardPreview";
-import { moveCard, type BoardData } from "@/lib/kanban";
+import { findColumnId, moveCard, type BoardData } from "@/lib/kanban";
 import { createCard, deleteCard, getBoard, moveCardApi, renameColumn, replaceBoard, sendAIChat, updateCard } from "@/lib/api";
 import { AIChatSidebar, type AIChatMessage } from "@/components/AIChatSidebar";
 
@@ -37,35 +37,12 @@ export const KanbanBoard = () => {
     })
   );
 
-  const cardsById = useMemo(() => board?.cards ?? {}, [board?.cards]);
-
   useEffect(() => {
-    let isMounted = true;
     getBoard()
-      .then((data) => {
-        if (isMounted) {
-          setBoard(data);
-          setIsLoading(false);
-        }
-      })
-      .catch(() => {
-        if (isMounted) {
-          setError("Failed to load board data.");
-          setIsLoading(false);
-        }
-      });
-
-      return () => {
-        isMounted = false;
-      }
+      .then(setBoard)
+      .catch(() => setError("Failed to load board data."))
+      .finally(() => setIsLoading(false));
   }, []);
-
-  const findColumnId = (columns: BoardData["columns"], id: string) => {
-    if (columns.some((column) => column.id === id)) {
-      return id;
-    }
-    return columns.find((column) => column.cardIds.includes(id))?.id;
-  };
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveCardId(event.active.id as string);
@@ -182,8 +159,6 @@ const handleSaveEdit = async (event: React.FormEvent) => {
   }
 };
 
-const activeCard = activeCardId ? cardsById[activeCardId] : null;
-
 if (isLoading) {
   return (
     <main className="flex min-h-screen items-center justify-center text-sm text-[var(--gray-text)]">
@@ -203,6 +178,8 @@ if (error) {
 if (!board) {
   return null;
 }
+
+const activeCard = activeCardId ? board.cards[activeCardId] : null;
 
 const handleSendChat = async (message: string) => {
   setIsChatLoading(true);
@@ -278,7 +255,7 @@ const handleSendChat = async (message: string) => {
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
-            <section className="grid gap-6 overflow-x-auto lg:grid-flow-col lg:auto-cols-[minmax(240px,1fr)]">
+            <section className="grid gap-6 overflow-x-auto pb-1 pt-1 lg:grid-flow-col lg:auto-cols-[minmax(240px,1fr)]">
               {board.columns.map((column) => (
                 <KanbanColumn
                   key={column.id}

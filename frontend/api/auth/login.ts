@@ -10,9 +10,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (!username || !password) {
             return res.status(400).json({ detail: "Missing username or password" });
         }
-        if (typeof username !== "string" || typeof password !== "string") {
-            return res.status(400).json({ detail: "Invalid payload" });
-        }
 
         const userResponse = await pool.query(
             "SELECT id, username, password_hash FROM users WHERE username = $1",

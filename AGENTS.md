@@ -15,8 +15,6 @@ For the MVP, users can register and sign in with their own credentials; the data
 
 For the MVP, there will only be 1 Kanban board per signed in user.
 
-For the MVP, this will run locally (in a docker container)
-
 ## Technical Decisions
 
 - NextJS frontend

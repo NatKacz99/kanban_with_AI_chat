@@ -5,7 +5,7 @@ from pathlib import Path
 from .auth import hash_password, verify_password, create_token
 from .auth_middleware import get_current_user
 from .schemas import RegisterRequest, LoginRequest, TokenResponse
-from .ai import call_openrouter, call_openrouter_structured
+from .ai import call_openrouter_structured
 
 from .db import get_connection, init_db, create_user_with_board
 from .schemas import ColumnCreate, ColumnUpdate, CardCreate, CardUpdate, CardMove
@@ -60,6 +60,15 @@ def update_positions(conn, column_id, card_ids):
             (index, card_id)
         )
 
+def get_user_board_id(conn, user_id: str) -> str:
+    row = conn.execute(
+        "SELECT id FROM boards WHERE user_id = ?",
+        (user_id,)
+    ).fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Board not found")
+    return row["id"]
+
 @app.get("/api/health")
 def health():
     return {"status": "ok"}
@@ -96,25 +105,13 @@ def login(payload: LoginRequest):
 @app.get("/api/board")
 def get_board(user=Depends(get_current_user)):
     with get_connection() as conn:
-        board = conn.execute(
-            "SELECT id FROM boards WHERE user_id = ?",
-            (user["user_id"],)
-        ).fetchone()
-        if not board:
-            raise HTTPException(status_code=404, detail="Board not found")
-        return build_board(conn, board["id"])
+        board_id = get_user_board_id(conn, user["user_id"])
+        return build_board(conn, board_id)
 
 @app.post("/api/board/replace")
 def replace_board(payload: BoardState, user=Depends(get_current_user)):
     with get_connection() as conn:
-        board = conn.execute(
-            "SELECT id FROM boards WHERE user_id = ?",
-            (user["user_id"],)
-        ).fetchone()
-        if not board:
-            raise HTTPException(status_code=404, detail="Board not found")
-
-        board_id = board["id"]
+        board_id = get_user_board_id(conn, user["user_id"])
 
         conn.execute(
             "DELETE FROM cards WHERE column_id IN (SELECT id FROM columns WHERE board_id = ?)",
@@ -132,9 +129,7 @@ def replace_board(payload: BoardState, user=Depends(get_current_user)):
 
         for column in payload.columns:
             for position, card_id in enumerate(column.cardIds):
-                card = payload.cards.get(card_id)
-                if not card:
-                    raise HTTPException(status_code=400, detail=f"Missing card data for {card_id}")
+                card = payload.cards[card_id]
                 conn.execute(
                     "INSERT INTO cards (id, column_id, title, details, position) VALUES (?, ?, ?, ?, ?)",
                     (card.id, column.id, card.title, card.details or "", position)
@@ -145,14 +140,7 @@ def replace_board(payload: BoardState, user=Depends(get_current_user)):
 @app.post("/api/columns")
 def create_column(payload: ColumnCreate, user=Depends(get_current_user)):
     with get_connection() as conn:
-        board = conn.execute(
-            "SELECT id FROM boards WHERE user_id = ?",
-            (user["user_id"],)
-        ).fetchone()
-        if not board:
-            raise HTTPException(status_code=404, detail="Board not found")
-
-        board_id = board["id"]
+        board_id = get_user_board_id(conn, user["user_id"])
 
         col_id = f"col-{uuid.uuid4().hex}"
         position = payload.position
@@ -172,53 +160,38 @@ def create_column(payload: ColumnCreate, user=Depends(get_current_user)):
 @app.put("/api/columns/{column_id}")
 def update_column(column_id: str, payload: ColumnUpdate, user=Depends(get_current_user)):
     with get_connection() as conn:
-        board = conn.execute(
-            "SELECT id FROM boards WHERE user_id = ?",
-            (user["user_id"],)
-        ).fetchone()
-        if not board:
-            raise HTTPException(status_code=404, detail="Board not found")
+        board_id = get_user_board_id(conn, user["user_id"])
         res = conn.execute(
             "UPDATE columns SET title = ? WHERE id = ? AND board_id = ?",
-            (payload.title, column_id, board["id"])
+            (payload.title, column_id, board_id)
         )
         if res.rowcount == 0:
             raise HTTPException(status_code=404, detail="Column not found")
-        return build_board(conn, board["id"])
+        return build_board(conn, board_id)
 
 @app.delete("/api/columns/{column_id}")
 def delete_column(column_id: str, user=Depends(get_current_user)):
     with get_connection() as conn:
-        board = conn.execute(
-            "SELECT id FROM boards WHERE user_id = ?",
-            (user["user_id"],)
-        ).fetchone()
-        if not board:
-            raise HTTPException(status_code=404, detail="Board not found")
+        board_id = get_user_board_id(conn, user["user_id"])
         conn.execute(
             "DELETE FROM cards WHERE column_id IN (SELECT id FROM columns WHERE id = ? AND board_id = ?)",
-            (column_id, board["id"])
+            (column_id, board_id)
         )
         res = conn.execute(
             "DELETE FROM columns WHERE id = ? AND board_id = ?",
-            (column_id, board["id"])
+            (column_id, board_id)
         )
         if res.rowcount == 0:
             raise HTTPException(status_code=404, detail="Column not found")
-        return build_board(conn, board["id"])
+        return build_board(conn, board_id)
 
 @app.post("/api/cards")
 def create_card(payload: CardCreate, user=Depends(get_current_user)):
     with get_connection() as conn:
-        board = conn.execute(
-            "SELECT id FROM boards WHERE user_id = ?",
-            (user["user_id"],)
-        ).fetchone()
-        if not board:
-            raise HTTPException(status_code=404, detail="Board not found")
+        board_id = get_user_board_id(conn, user["user_id"])
         allowed = conn.execute(
             "SELECT 1 FROM columns WHERE id = ? AND board_id = ?",
-            (payload.columnId, board["id"])
+            (payload.columnId, board_id)
         ).fetchone()
         if not allowed:
             raise HTTPException(status_code=404, detail="Column not found")
@@ -235,54 +208,39 @@ def create_card(payload: CardCreate, user=Depends(get_current_user)):
             "INSERT INTO cards (id, column_id, title, details, position) VALUES (?, ?, ?, ?, ?)",
             (card_id, payload.columnId, payload.title, payload.details, position)
         )
-        return build_board(conn, board["id"])
+        return build_board(conn, board_id)
 
 @app.put("/api/cards/{card_id}")
 def update_card(card_id: str, payload: CardUpdate, user=Depends(get_current_user)):
     with get_connection() as conn:
-        board = conn.execute(
-            "SELECT id FROM boards WHERE user_id = ?",
-            (user["user_id"],)
-        ).fetchone()
-        if not board:
-            raise HTTPException(status_code=404, detail="Board not found")
+        board_id = get_user_board_id(conn, user["user_id"])
         res = conn.execute(
             "UPDATE cards SET title = ?, details = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND column_id IN (SELECT id FROM columns WHERE board_id = ?)",
-            (payload.title, payload.details, card_id, board["id"])
+            (payload.title, payload.details, card_id, board_id)
         )
         if res.rowcount == 0:
             raise HTTPException(status_code=404, detail="Card not found")
-        return build_board(conn, board["id"])
+        return build_board(conn, board_id)
 
 @app.delete("/api/cards/{card_id}")
 def delete_card(card_id: str, user=Depends(get_current_user)):
     with get_connection() as conn:
-        board = conn.execute(
-            "SELECT id FROM boards WHERE user_id = ?",
-            (user["user_id"],)
-        ).fetchone()
-        if not board:
-            raise HTTPException(status_code=404, detail="Board not found")
+        board_id = get_user_board_id(conn, user["user_id"])
         res = conn.execute(
             "DELETE FROM cards WHERE id = ? AND column_id IN (SELECT id FROM columns WHERE board_id = ?)",
-            (card_id, board["id"])
+            (card_id, board_id)
         )
         if res.rowcount == 0:
             raise HTTPException(status_code=404, detail="Card not found")
-        return build_board(conn, board["id"])
+        return build_board(conn, board_id)
 
 @app.post("/api/cards/{card_id}/move")
 def move_card(card_id: str, payload: CardMove, user=Depends(get_current_user)):
     with get_connection() as conn:
-        board = conn.execute(
-            "SELECT id FROM boards WHERE user_id = ?",
-            (user["user_id"],)
-        ).fetchone()
-        if not board:
-            raise HTTPException(status_code=404, detail="Board not found")
+        board_id = get_user_board_id(conn, user["user_id"])
         card = conn.execute(
             "SELECT cards.* FROM cards JOIN columns ON columns.id = cards.column_id WHERE cards.id = ? AND columns.board_id = ?",
-            (card_id, board["id"])
+            (card_id, board_id)
         ).fetchone()
         if not card:
             raise HTTPException(status_code=404, detail="Card not found")
@@ -291,7 +249,7 @@ def move_card(card_id: str, payload: CardMove, user=Depends(get_current_user)):
         to_column = payload.toColumnId
         allowed = conn.execute(
             "SELECT 1 FROM columns WHERE id = ? AND board_id = ?",
-            (to_column, board["id"])
+            (to_column, board_id)
         ).fetchone()
         if not allowed:
             raise HTTPException(status_code=404, detail="Column not found")
@@ -322,27 +280,13 @@ def move_card(card_id: str, payload: CardMove, user=Depends(get_current_user)):
         update_positions(conn, from_column, from_ids)
         update_positions(conn, to_column, to_ids)
 
-        return build_board(conn, board["id"])
-
-@app.post("/api/cards/{card_id}")
-def move_card_alias(card_id: str, payload: CardMove, user=Depends(get_current_user)):
-    return move_card(card_id, payload, user)
-
-@app.get("/api/ai/test")
-def ai_test():
-    answer = call_openrouter("2+2")
-    return {"answer": answer}
+        return build_board(conn, board_id)
 
 @app.post("/api/ai/chat", response_model=AIChatResponse)
 def ai_chat(payload: AIChatRequest, user=Depends(get_current_user)):
     with get_connection() as conn:
-        board_row = conn.execute(
-            "SELECT id FROM boards WHERE user_id = ?",
-            (user["user_id"],)
-        ).fetchone()
-        if not board_row:
-            raise HTTPException(status_code=404, detail="Board not found")
-        board = build_board(conn, board_row["id"])
+        board_id = get_user_board_id(conn, user["user_id"])
+        board = build_board(conn, board_id)
 
     system_prompt = (
         "You are an assistant for a kanban project management app."

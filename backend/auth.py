@@ -5,7 +5,7 @@ import jwt
 
 JWT_SECRET = os.getenv("JWT_SECRET", "dev-secret")
 JWT_ALGORITHM = "HS256"
-JWT_EXP_SECONDS = 60 *60 * 24  # 24 hours
+JWT_EXP_SECONDS = 60 * 60 * 24  # 24 hours
 
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
