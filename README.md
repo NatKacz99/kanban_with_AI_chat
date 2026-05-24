@@ -91,5 +91,7 @@ Roles and permissions, multiple boards per user, auditing, enterprise features.
 <img width="536" height="401" alt="photo_1" src="https://github.com/user-attachments/assets/1fc8f5c5-c972-4f71-b3a4-3456e1f8731f" />
 <img width="1901" height="999" alt="photo_2" src="https://github.com/user-attachments/assets/37bc12b5-5851-49a8-9bf6-db91a3c12836" />
 <img width="1773" height="961" alt="photo_3" src="https://github.com/user-attachments/assets/a22c0e7f-4c9d-4876-a56d-5542e5411f8f" />
+<img width="1046" height="844" alt="photo_4" src="https://github.com/user-attachments/assets/5d184460-1e2f-440e-98dc-3974c2d1c8bc" />
+
 
 
